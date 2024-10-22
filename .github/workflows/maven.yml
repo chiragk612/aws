@@ -1,3 +1,4 @@
+
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
  
@@ -32,20 +33,20 @@ jobs:
  
     - uses: actions/upload-artifact@v4
       with:
-        name: my-new-case-study-1.0-SNAPSHOT-lambda-package
+        name: case-study-1.0-SNAPSHOT-lambda-package.zip
         path: ./target
  
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET_KEY }}
         aws-region: us-east-1
  
     - name: Upload artifact zip to S3 bucket
-      run: aws s3 cp ./target/my-new-case-study-1.0-SNAPSHOT-lambda-package.zip s3://aws-weather-app-bucket/
+      run: aws s3 cp ./target/case-study-1.0-SNAPSHOT-lambda-package.zip s3://cgkbucket/
     - name: Upload cloudformation template to S3 bucket
-      run: aws s3 cp ./Deployment.yaml s3://aws-weather-app-bucket/
+      run: aws s3 cp ./Deployment.yaml s3://cgkbucket/
  
   deploy:
     runs-on: ubuntu-latest
@@ -55,19 +56,19 @@ jobs:
     steps: 
     - uses: actions/download-artifact@v4
       with:
-        name: my-new-case-study-1.0-SNAPSHOT-lambda-package
+        name: case-study-1.0-SNAPSHOT-lambda-package.zip
         path: ./target
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_ACCESS_SECRET_KEY }}
         aws-region: us-east-1
  
     - name: Deploy to AWS CloudFormation
       uses: aws-actions/aws-cloudformation-github-deploy@v1
       with:
         name: new-aws-weather-app-stack
-        template: https://aws-weather-app-bucket.s3.amazonaws.com/Deployment.yaml
+        template: https://cgkbucket.s3.amazonaws.com/Deployment.yaml
         no-fail-on-empty-changeset: "1"
         capabilities: CAPABILITY_NAMED_IAM

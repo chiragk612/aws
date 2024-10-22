@@ -1,3 +1,4 @@
+
 Resources:
   WeatherData:
     Type: 'AWS::DynamoDB::Table'
@@ -14,28 +15,31 @@ Resources:
         WriteCapacityUnits: 5
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
+
   WeatherIamUserRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
+        Version: '2012-10-17'
         Statement:
-          - Action: 'sts:AssumeRole'
-            Effect: Allow
+          - Effect: Allow
             Principal:
               Service: lambda.amazonaws.com
-        Version: 2012-10-17
+            Action: 'sts:AssumeRole'
       ManagedPolicyArns:
-        - !Join 
-          - ''
-          - - 'arn:'
-            - !Ref 'AWS::Partition'
-            - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+
   WeatherIamUserPolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
+      PolicyName: WeatherIamUserPolicy
+      Roles:
+        - !Ref WeatherIamUserRole
       PolicyDocument:
+        Version: '2012-10-17'
         Statement:
-          - Action:
+          - Effect: Allow
+            Action:
               - 'dynamodb:BatchGetItem'
               - 'dynamodb:BatchWriteItem'
               - 'dynamodb:ConditionCheckItem'
@@ -48,188 +52,97 @@ Resources:
               - 'dynamodb:Query'
               - 'dynamodb:Scan'
               - 'dynamodb:UpdateItem'
-            Effect: Allow
-            Resource:
-              - !GetAtt 
-                - WeatherData
-                - Arn
-              - !Ref 'AWS::NoValue'
-        Version: 2012-10-17
-      PolicyName: WeatherIamUserPolicy
-      Roles:
-        - !Ref WeatherIamUserRole
+            Resource: !GetAtt WeatherData.Arn
+
   WeatherUpdatesLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Properties:
       Code:
-        S3Bucket: cgkbucket 
+        S3Bucket: cgkbucket
         S3Key: case-study-1.0-SNAPSHOT-lambda-package.zip
+      Handler: org.aws.StreamLambdaHandler::handleRequest
+      Runtime: java17
+      MemorySize: 1024
+      Timeout: 30
+      Role: !GetAtt WeatherIamUserRole.Arn
       Environment:
         Variables:
           TABLE_NAME: !Ref WeatherData
-      Handler: org.aws.StreamLambdaHandler::handleRequest
-      MemorySize: 1024
-      Role: !GetAtt 
-        - WeatherIamUserRole
-        - Arn
-      Runtime: java17
-      Timeout: 30
     DependsOn:
       - WeatherIamUserPolicy
       - WeatherIamUserRole
-  WeatherLambdaRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action: 'sts:AssumeRole'
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-        Version: 2012-10-17
-  WeatherLambdaRolePolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Action:
-              - 'dynamodb:DeleteItem'
-              - 'dynamodb:GetItem'
-              - 'dynamodb:PutItem'
-              - 'dynamodb:Query'
-              - 'dynamodb:Scan'
-              - 'dynamodb:UpdateItem'
-            Effect: Allow
-            Resource: !GetAtt 
-              - WeatherData
-              - Arn
-        Version: 2012-10-17
-      PolicyName: WeatherLambdaRolePolicy
-      Roles:
-        - !Ref WeatherLambdaRole
+
   WeatherRestApi:
     Type: 'AWS::ApiGateway::RestApi'
     Properties:
-      Description: This service serves weather data.
       Name: Weather-app-rest-api
+      Description: This service serves weather data.
+
   WeatherApiResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
-      ParentId: !GetAtt 
-        - WeatherRestApi
-        - RootResourceId
+      ParentId: !GetAtt WeatherRestApi.RootResourceId
       PathPart: '{proxy+}'
       RestApiId: !Ref WeatherRestApi
+
   WeatherUpdatesApiMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
       AuthorizationType: NONE
       HttpMethod: ANY
-      Integration:
-        IntegrationHttpMethod: ANY
-        Type: AWS_PROXY
-        Uri: !Join 
-          - ''
-          - - 'arn:'
-            - !Ref 'AWS::Partition'
-            - ':apigateway:'
-            - !Ref 'AWS::Region'
-            - ':lambda:path/2015-03-31/functions/'
-            - !GetAtt 
-              - WeatherUpdatesLambdaFunction
-              - Arn
-            - /invocations
       ResourceId: !Ref WeatherApiResource
       RestApiId: !Ref WeatherRestApi
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WeatherUpdatesLambdaFunction.Arn}/invocations'
+
   WeatherApiDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     Properties:
-      Description: This service serves weather data.
       RestApiId: !Ref WeatherRestApi
+      Description: This service serves weather data.
     DependsOn:
       - WeatherUpdatesApiMethod
       - WeatherApiResource
+
   WeatherApiDeploymentStage:
     Type: 'AWS::ApiGateway::Stage'
     Properties:
+      StageName: prod
       DeploymentId: !Ref WeatherApiDeployment
       RestApiId: !Ref WeatherRestApi
-      StageName: prod
+
   WeatherApiLambdaPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
       FunctionName: !GetAtt WeatherUpdatesLambdaFunction.Arn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Join 
-        - ''
-        - - 'arn:'
-          - !Ref 'AWS::Partition'
-          - ':execute-api:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':'
-          - !Ref WeatherRestApi
-          - /
-          - '*'
-          - /
-          - '*'
-          - /
-          - '*'
-  WeatherApiEventRulePermission:
-    Type: 'AWS::Lambda::Permission'
-    Properties:
-      Action: 'lambda:InvokeFunction'
-      FunctionName: !GetAtt WeatherUpdatesLambdaFunction.Arn
-      Principal: apidestinations.events.amazonaws.com
-      SourceArn: !Join 
-        - ''
-        - - 'arn:'
-          - !Ref 'AWS::Partition'
-          - ':events:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':'
-          - 'rule'
-          - /
-          - '*'
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${WeatherRestApi}/*/*'
+
   WeatherEventBus:
     Type: 'AWS::Events::EventBus'
     Properties:
       Name: WeatherEventBus
+
   WeatherEventBridgeRule:
     Type: 'AWS::Events::Rule'
     Properties:
       ScheduleExpression: rate(5 minutes)
       State: ENABLED
       Targets:
-        - Arn: !GetAtt 
-            - WeatherUpdatesLambdaFunction
-            - Arn
+        - Arn: !GetAtt WeatherUpdatesLambdaFunction.Arn
           Id: Target0
+
   WeatherEventRulePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
-      FunctionName: !GetAtt 
-        - WeatherUpdatesLambdaFunction
-        - Arn
+      FunctionName: !GetAtt WeatherUpdatesLambdaFunction.Arn
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt 
-        - WeatherEventBridgeRule
-        - Arn
+      SourceArn: !GetAtt WeatherEventBridgeRule.Arn
+
 Outputs:
-  WeatherApiEndpoint9062F38A:
-    Value: !Join 
-      - ''
-      - - 'https://'
-        - !Ref WeatherRestApi
-        - .execute-api.
-        - !Ref 'AWS::Region'
-        - .
-        - !Ref 'AWS::URLSuffix'
-        - /
-        - !Ref WeatherApiDeploymentStage
-        - /
+  WeatherApiEndpoint:
+    Value: !Sub 'https://${WeatherRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${WeatherApiDeploymentStage}/'

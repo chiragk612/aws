@@ -35,7 +35,7 @@ Resources:
           UpdateRuntimeOn: "Auto"
         Handler: "org.aws.StreamLambdaHandler::handleRequest"
         Code:
-          S3Bucket: aws-weather-app-bucket
+          S3Bucket: cgkbucket
           S3Key: case-study-1.0-SNAPSHOT-lambda-package.zip
         Role: !GetAtt LambdaExecutionRole.Arn
         Environment:

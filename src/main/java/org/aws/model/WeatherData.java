@@ -2,9 +2,6 @@ package org.aws.model;
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-
-
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 @DynamoDBTable(tableName = "WeatherData")
 public class WeatherData {

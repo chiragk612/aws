@@ -27,7 +27,11 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-
+  WeatherS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: cgkbucket
+      
   WeatherIamUserPolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
@@ -142,10 +146,7 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt WeatherEventBridgeRule.Arn
 
-  WeatherS3Bucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: cgkbucket
+  
 
 Outputs:
   WeatherApiEndpoint:

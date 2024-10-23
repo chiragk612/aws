@@ -1,22 +1,8 @@
-Parameters:
-  BucketName: { Type: String, Default: "cgkbucket" }
-
-Resources:  
-  AccessLogBucket:
-    Type: "AWS::S3::Bucket"
+Resources:
+  WeatherS3Bucket:
+    Type: 'AWS::S3::Bucket'
     Properties:
-      AccessControl: LogDeliveryWrite
-            
-  MainBucket:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      BucketName: !Ref BucketName
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      LoggingConfiguration:
-        DestinationBucketName: !Ref AccessLogBucket
+      BucketName: cgkbucket
 
   WeatherData:
     Type: 'AWS::DynamoDB::Table'
@@ -72,8 +58,12 @@ Resources:
               - 'dynamodb:UpdateItem'
               - 's3:GetObject'
               - 's3:PutObject'
+              - 's3:ListBucket'
+              - 's3:CreateBucket'
+              - 's3:DeleteBucket'
             Resource:
               - !GetAtt WeatherData.Arn
+              - !Sub 'arn:${AWS::Partition}:s3:::cgkbucket'
               - !Sub 'arn:${AWS::Partition}:s3:::cgkbucket/*'
 
   WeatherUpdatesLambdaFunction:

@@ -22,8 +22,8 @@ import java.util.Iterator;
 public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, String> {
     private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
     private final DynamoDB dynamoDB = new DynamoDB(client);
-    private final String tableName = "WeatherData";
-    private final String apiEndpoint = "https://api.openweathermap.org/data/2.5/weather?q={city}&APPID=450b8c32f08b8258baa0832a413eaf2d";
+    private final String tableName = System.getenv("TABLE_NAME");
+    private final String baseUrl = System.getenv("BASE_URL");
 
     @Override
     public String handleRequest(ScheduledEvent event, Context context) {
@@ -35,7 +35,7 @@ public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, Stri
             Iterator<Item> iterator = table.scan(scanSpec).iterator();
             while (iterator.hasNext()) {
                 String city = iterator.next().getString("name");
-                invokeApi(city);
+                invokeApi(city, logger);
             }
         } catch (Exception e) {
             logger.log("Error: " + e.getMessage());
@@ -44,16 +44,20 @@ public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, Stri
         return "Invocation completed";
     }
 
-    private void invokeApi(String city) throws Exception {
+    private void invokeApi(String city, LambdaLogger logger) throws Exception {
         String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8.toString());
-        String urlString = apiEndpoint.replace("{city}", encodedCity);
+        String urlString = baseUrl + "weather/" + encodedCity;
+        
+        // Log the generated URL
+        logger.log("Generated URL: " + urlString);
+        
         URI uri = new URI(urlString);
         HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
         connection.setRequestMethod("GET");
         int responseCode = connection.getResponseCode();
         
         // Log the response code
-        System.out.println("Response Code: " + responseCode);
+        logger.log("Response Code: " + responseCode);
         
         // Read and log the response data
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -66,6 +70,6 @@ public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, Stri
         connection.disconnect();
         
         // Log the response content
-        System.out.println("Response Content: " + content.toString());
+        logger.log("Response Content: " + content.toString());
     }
 }

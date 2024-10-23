@@ -13,7 +13,8 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, String> {
@@ -42,10 +43,10 @@ public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, Stri
     }
 
     private void invokeApi(String city) throws Exception {
-        String urlString = apiEndpoint.replace("{city}", city);
+        String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8.toString());
+        String urlString = apiEndpoint.replace("{city}", encodedCity);
         URI uri = new URI(urlString);
-        URL url = uri.toURL();
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
         connection.setRequestMethod("GET");
         connection.getResponseCode();
     }

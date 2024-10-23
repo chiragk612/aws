@@ -147,7 +147,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: cgkbucket
-        S3Key: case-study-1.0-SNAPSHOT-invoker-lambda-package.zip
+        S3Key: case-study-1.0-SNAPSHOT-lambda-package.zip
       Handler: org.aws.InvokerLambdaHandler::handleRequest
       Runtime: java17
       MemorySize: 1024

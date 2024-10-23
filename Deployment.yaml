@@ -27,11 +27,7 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-  WeatherS3Bucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: cgkbucket
-      
+
   WeatherIamUserPolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
@@ -57,6 +53,11 @@ Resources:
               - 'dynamodb:UpdateItem'
             Resource: !GetAtt WeatherData.Arn
 
+  WeatherS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: cgkbucket
+
   WeatherUpdatesLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -74,6 +75,7 @@ Resources:
     DependsOn:
       - WeatherIamUserPolicy
       - WeatherIamUserRole
+      - WeatherS3Bucket
 
   WeatherRestApi:
     Type: 'AWS::ApiGateway::RestApi'
@@ -145,8 +147,6 @@ Resources:
       FunctionName: !GetAtt WeatherUpdatesLambdaFunction.Arn
       Principal: events.amazonaws.com
       SourceArn: !GetAtt WeatherEventBridgeRule.Arn
-
-  
 
 Outputs:
   WeatherApiEndpoint:

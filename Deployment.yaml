@@ -62,7 +62,7 @@ Resources:
     Type: 'AWS::Lambda::Function'
     Properties:
       Code:
-        S3Bucket: cgkbucket
+        S3Bucket: !Ref WeatherS3Bucket
         S3Key: case-study-1.0-SNAPSHOT-lambda-package.zip
       Handler: org.aws.StreamLambdaHandler::handleRequest
       Runtime: java17

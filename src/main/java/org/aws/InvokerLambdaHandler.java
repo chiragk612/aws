@@ -45,6 +45,9 @@ public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, Stri
     }
 
     private void invokeApi(String city, LambdaLogger logger) throws Exception {
+        // Remove any surrounding quotes from the city name
+        city = city.replaceAll("^\"|\"$", "");
+        
         String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8.toString());
         String urlString = baseUrl + "weather/" + encodedCity;
         

@@ -141,7 +141,13 @@ Resources:
       FunctionName: !GetAtt WeatherUpdatesInvokerLambdaFunction.Arn
       Principal: events.amazonaws.com
       SourceArn: !GetAtt WeatherEventBridgeRule.Arn
-
+      
+  Outputs:
+  WeatherApiEndpoint:
+    Value: !Sub 'https://${WeatherRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${WeatherApiDeploymentStage}/'
+    Export:
+      Name: WeatherApiEndpoint
+      
   WeatherUpdatesInvokerLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -161,8 +167,4 @@ Resources:
       - WeatherIamUserPolicy
       - WeatherIamUserRole
 
-Outputs:
-  WeatherApiEndpoint:
-    Value: !Sub 'https://${WeatherRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${WeatherApiDeploymentStage}/'
-    Export:
-      Name: WeatherApiEndpoint
+

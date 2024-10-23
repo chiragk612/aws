@@ -28,7 +28,7 @@ public class WeatherController {
     @DeleteMapping({"/id"})
     public String deletecitybyId(@PathVariable String city){
         weatherService.deleteById(city);
-        return "deleted....";
+        return "Successfully Deleted " + city;
     }
 }
 

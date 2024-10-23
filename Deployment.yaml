@@ -1,22 +1,22 @@
-Resources:
-  WeatherS3Bucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: cgkbucket
+Parameters:
+  BucketName: { Type: String, Default: "cgkbucket" }
 
-  WeatherS3BucketPolicy:
-    Type: 'AWS::S3::BucketPolicy'
+Resources:  
+  AccessLogBucket:
+    Type: "AWS::S3::Bucket"
     Properties:
-      Bucket: !Ref WeatherS3Bucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal: '*'
-            Action:
-              - 's3:GetObject'
-              - 's3:PutObject'
-            Resource: !Sub 'arn:${AWS::Partition}:s3:::cgkbucket/*'
+      AccessControl: LogDeliveryWrite
+            
+  MainBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Ref BucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLogBucket
 
   WeatherData:
     Type: 'AWS::DynamoDB::Table'

@@ -1,5 +1,5 @@
 Resources:
- S3Bucket:
+  WeatherS3Bucket:
     Type: 'AWS::S3::Bucket'
     Properties:
       BucketName: cgkbucket
@@ -137,7 +137,7 @@ Resources:
       ScheduleExpression: rate(5 minutes)
       State: ENABLED
       Targets:
-        - Arn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${WeatherRestApi}/prod/ANY/{proxy+}'
+        - Arn: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${WeatherRestApi}/stages/${WeatherApiDeploymentStage}/resources/${WeatherApiResource}/methods/ANY'
           Id: Target0
 
   WeatherEventRulePermission:

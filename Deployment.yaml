@@ -156,7 +156,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: WeatherData
-          API_ENDPOINT: 'https://api.openweathermap.org/data/2.5/weather?q={city}&APPID=450b8c32f08b8258baa0832a413eaf2d'
+          BASE_URL: !ImportValue WeatherApiEndpoint
     DependsOn:
       - WeatherIamUserPolicy
       - WeatherIamUserRole
@@ -164,3 +164,5 @@ Resources:
 Outputs:
   WeatherApiEndpoint:
     Value: !Sub 'https://${WeatherRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${WeatherApiDeploymentStage}/'
+    Export:
+      Name: WeatherApiEndpoint

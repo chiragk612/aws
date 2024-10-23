@@ -1,4 +1,9 @@
 Resources:
+  WeatherS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: cgkbucket
+
   WeatherData:
     Type: 'AWS::DynamoDB::Table'
     Properties:
@@ -52,11 +57,6 @@ Resources:
               - 'dynamodb:Scan'
               - 'dynamodb:UpdateItem'
             Resource: !GetAtt WeatherData.Arn
-
-  WeatherS3Bucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: cgkbucket
 
   WeatherUpdatesLambdaFunction:
     Type: 'AWS::Lambda::Function'

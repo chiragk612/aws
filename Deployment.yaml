@@ -1,3 +1,4 @@
+
 Resources:
   WeatherData:
     Type: 'AWS::DynamoDB::Table'
@@ -147,7 +148,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: cgkbucket
-        S3Key: case-study-1.0-SNAPSHOT-invoker-lambda-package.zip
+        S3Key: case-study-1.0-SNAPSHOT-lambda-package.zip
       Handler: org.aws.InvokerLambdaHandler::handleRequest
       Runtime: java17
       MemorySize: 1024
@@ -156,11 +157,14 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: WeatherData
-          API_ENDPOINT: 'https://api.openweathermap.org/data/2.5/weather?q={city}&APPID=450b8c32f08b8258baa0832a413eaf2d'
+          BASE_URL: !Sub 'https://${WeatherRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${WeatherApiDeploymentStage}/'
     DependsOn:
       - WeatherIamUserPolicy
       - WeatherIamUserRole
+      - WeatherApiDeploymentStage
 
 Outputs:
   WeatherApiEndpoint:
     Value: !Sub 'https://${WeatherRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${WeatherApiDeploymentStage}/'
+    Export:
+      Name: WeatherApiEndpoint

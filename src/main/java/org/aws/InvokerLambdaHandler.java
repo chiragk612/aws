@@ -11,6 +11,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -42,29 +44,28 @@ public class InvokerLambdaHandler implements RequestHandler<ScheduledEvent, Stri
         return "Invocation completed";
     }
 
-   private void invokeApi(String city) throws Exception {
-    String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8.toString());
-    String urlString = apiEndpoint.replace("{city}", encodedCity);
-    URI uri = new URI(urlString);
-    HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
-    connection.setRequestMethod("GET");
-    int responseCode = connection.getResponseCode();
-    
-    // Log the response code
-    System.out.println("Response Code: " + responseCode);
-    
-    // Read and log the response data
-    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-    String inputLine;
-    StringBuilder content = new StringBuilder();
-    while ((inputLine = in.readLine()) != null) {
-        content.append(inputLine);
+    private void invokeApi(String city) throws Exception {
+        String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8.toString());
+        String urlString = apiEndpoint.replace("{city}", encodedCity);
+        URI uri = new URI(urlString);
+        HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
+        connection.setRequestMethod("GET");
+        int responseCode = connection.getResponseCode();
+        
+        // Log the response code
+        System.out.println("Response Code: " + responseCode);
+        
+        // Read and log the response data
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;
+        StringBuilder content = new StringBuilder();
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
+        }
+        in.close();
+        connection.disconnect();
+        
+        // Log the response content
+        System.out.println("Response Content: " + content.toString());
     }
-    in.close();
-    connection.disconnect();
-    
-    // Log the response content
-    System.out.println("Response Content: " + content.toString());
-}
-
 }

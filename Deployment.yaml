@@ -131,12 +131,9 @@ Resources:
       ScheduleExpression: rate(5 minutes)
       State: ENABLED
       Targets:
-        - Arn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${WeatherRestApi}/prod/GET/weather/{city}'
+        - Arn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${WeatherRestApi}/prod/GET/weather/Mumbai'
           Id: Target0
-          InputTransformer:
-            InputPathsMap:
-              city: 'Mumbai'  
-            InputTemplate: '{"city": <city>}'
+          
 
   WeatherEventRulePermission:
     Type: 'AWS::Lambda::Permission'

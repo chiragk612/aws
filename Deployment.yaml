@@ -1,24 +1,4 @@
 Resources:
-  WeatherS3Bucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: cgkbucket
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        IgnorePublicAcls: true
-        BlockPublicPolicy: true
-        RestrictPublicBuckets: true
-      AccessControl: Private
-      VersioningConfiguration:
-        Status: Suspended
-      Tags:
-        - Key: Purpose
-          Value: General
-
   WeatherData:
     Type: 'AWS::DynamoDB::Table'
     Properties:
@@ -71,15 +51,7 @@ Resources:
               - 'dynamodb:Query'
               - 'dynamodb:Scan'
               - 'dynamodb:UpdateItem'
-              - 's3:GetObject'
-              - 's3:PutObject'
-              - 's3:ListBucket'
-              - 's3:CreateBucket'
-              - 's3:DeleteBucket'
-            Resource:
-              - !GetAtt WeatherData.Arn
-              - !Sub 'arn:${AWS::Partition}:s3:::cgkbucket'
-              - !Sub 'arn:${AWS::Partition}:s3:::cgkbucket/*'
+            Resource: !GetAtt WeatherData.Arn
 
   WeatherUpdatesLambdaFunction:
     Type: 'AWS::Lambda::Function'
@@ -98,7 +70,6 @@ Resources:
     DependsOn:
       - WeatherIamUserPolicy
       - WeatherIamUserRole
-      - WeatherS3Bucket
 
   WeatherRestApi:
     Type: 'AWS::ApiGateway::RestApi'
@@ -160,7 +131,7 @@ Resources:
       ScheduleExpression: rate(5 minutes)
       State: ENABLED
       Targets:
-        - Arn: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${WeatherRestApi}/stages/${WeatherApiDeploymentStage}/resources/${WeatherApiResource}/methods/ANY'
+        - Arn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${WeatherRestApi}/prod/ANY/{proxy+}'
           Id: Target0
 
   WeatherEventRulePermission:

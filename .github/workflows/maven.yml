@@ -24,7 +24,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: case-study-1.0-SNAPSHOT-lambda-package.zip
-        path: ./target
+        path: ./target/case-study-1.0-SNAPSHOT-lambda-package.zip
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
